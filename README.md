@@ -60,7 +60,7 @@ Le workflow GitHub Actions est configuré dans `.github/workflows/android.yml` e
 5. Compilation de l'APK Debug (`./gradlew assembleDebug`).
 6. Téléversement de l'artefact APK (`VisionAI-Studio-debug-apk`) téléchargeable directement depuis l'onglet **Actions** de GitHub.
 
----
+--
 
 ## 💻 Compilation en Local
 
