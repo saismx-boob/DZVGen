@@ -67,6 +67,7 @@ import com.example.data.local.CreationEntity
 import com.example.data.remote.PromptEnhancer
 import com.example.model.CameraMotions
 import com.example.model.MediaType
+import com.example.ui.components.AdvancedPromptBuilder
 import com.example.ui.components.AspectRatioSelector
 import com.example.ui.components.EngineCardSelector
 import com.example.ui.components.LiveRenderDialog
@@ -395,6 +396,14 @@ fun StudioScreen(
                         }
                     }
                 }
+            }
+
+            // Advanced Prompt Construction UI (Suggestions tags: styles, lighting, quality, camera, motion)
+            item {
+                AdvancedPromptBuilder(
+                    currentPrompt = uiState.prompt,
+                    onPromptChanged = { viewModel.onPromptChange(it) }
+                )
             }
 
             // Negative prompt collapsible accordion

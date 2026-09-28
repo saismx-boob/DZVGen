@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Share
@@ -33,6 +34,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,6 +70,7 @@ import com.example.ui.theme.StudioDarkBg
 import com.example.ui.theme.StudioDarkSurface
 import com.example.ui.theme.StudioDarkSurfaceElevated
 import com.example.ui.theme.StudioDarkSurfaceVariant
+import com.example.ui.theme.StudioEmeraldGlow
 import com.example.ui.theme.StudioNeonCyan
 import com.example.ui.theme.StudioNeonPink
 import com.example.ui.theme.StudioNeonViolet
@@ -74,7 +78,9 @@ import com.example.ui.theme.StudioNeonVioletLight
 import com.example.ui.theme.StudioTextMuted
 import com.example.ui.theme.StudioTextPrimary
 import com.example.ui.theme.StudioTextSecondary
+import com.example.util.MediaDownloadManager
 import com.example.util.SocialShareManager
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -93,6 +99,8 @@ fun DetailScreen(
 
     var showShareSheet by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var isDownloading by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     val isVideo = creation.type == "VIDEO"
     val scrollState = rememberScrollState()
@@ -151,6 +159,36 @@ fun DetailScreen(
                             contentDescription = "Favori",
                             tint = if (creation.isFavorite) StudioNeonPink else StudioTextSecondary
                         )
+                    }
+
+                    // Download Button in Top Bar
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                isDownloading = true
+                                MediaDownloadManager.downloadMediaToLocal(context, creation)
+                                isDownloading = false
+                            }
+                        },
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(StudioEmeraldGlow.copy(alpha = 0.2f), CircleShape)
+                            .border(1.dp, StudioEmeraldGlow.copy(alpha = 0.6f), CircleShape)
+                            .testTag("detail_download_button")
+                    ) {
+                        if (isDownloading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = StudioEmeraldGlow,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Download,
+                                contentDescription = "Télécharger en local",
+                                tint = StudioEmeraldGlow
+                            )
+                        }
                     }
 
                     // Share Button
@@ -283,6 +321,53 @@ fun DetailScreen(
                     Text(
                         text = "Remixer (Studio)",
                         fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Primary Download Button
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        isDownloading = true
+                        MediaDownloadManager.downloadMediaToLocal(context, creation)
+                        isDownloading = false
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .height(48.dp)
+                    .testTag("action_download_local_button"),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = StudioEmeraldGlow)
+            ) {
+                if (isDownloading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        color = Color.Black,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Téléchargement en cours...",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Download,
+                        contentDescription = null,
+                        tint = Color.Black,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isVideo) "Télécharger la Vidéo (Galerie/Films)" else "Télécharger l'Image (Galerie/Photos)",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
                     )
                 }
             }

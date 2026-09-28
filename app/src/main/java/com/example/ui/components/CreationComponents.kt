@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Pause
@@ -52,6 +53,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,6 +77,7 @@ import com.example.ui.theme.StudioDarkBg
 import com.example.ui.theme.StudioDarkSurface
 import com.example.ui.theme.StudioDarkSurfaceElevated
 import com.example.ui.theme.StudioDarkSurfaceVariant
+import com.example.ui.theme.StudioEmeraldGlow
 import com.example.ui.theme.StudioNeonCyan
 import com.example.ui.theme.StudioNeonPink
 import com.example.ui.theme.StudioNeonViolet
@@ -82,7 +85,9 @@ import com.example.ui.theme.StudioNeonVioletLight
 import com.example.ui.theme.StudioTextMuted
 import com.example.ui.theme.StudioTextPrimary
 import com.example.ui.theme.StudioTextSecondary
+import com.example.util.MediaDownloadManager
 import com.example.util.SocialShareManager
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 
 @Composable
@@ -93,6 +98,8 @@ fun CreationCard(
     onQuickShare: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val isVideo = creation.type == "VIDEO"
     val ratio = when (creation.aspectRatio) {
         "16:9" -> 16f / 9f
@@ -261,18 +268,38 @@ fun CreationCard(
                         )
                     }
 
-                    IconButton(
-                        onClick = onQuickShare,
-                        modifier = Modifier
-                            .size(28.dp)
-                            .testTag("quick_share_${creation.id}")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = "Partager",
-                            tint = StudioTextSecondary,
-                            modifier = Modifier.size(16.dp)
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    MediaDownloadManager.downloadMediaToLocal(context, creation)
+                                }
+                            },
+                            modifier = Modifier
+                                .size(28.dp)
+                                .testTag("quick_download_${creation.id}")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Download,
+                                contentDescription = "Télécharger",
+                                tint = StudioEmeraldGlow,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        IconButton(
+                            onClick = onQuickShare,
+                            modifier = Modifier
+                                .size(28.dp)
+                                .testTag("quick_share_${creation.id}")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Partager",
+                                tint = StudioTextSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -474,6 +501,7 @@ fun SocialShareBottomSheet(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -582,6 +610,39 @@ fun SocialShareBottomSheet(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                coroutineScope.launch {
+                                    MediaDownloadManager.downloadMediaToLocal(context, creation)
+                                    onDismiss()
+                                }
+                            }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Download,
+                            contentDescription = "Télécharger en local",
+                            tint = StudioEmeraldGlow
+                        )
+                        Column {
+                            Text(
+                                text = "Télécharger sur l'appareil (Galerie)",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                color = StudioTextPrimary
+                            )
+                            Text(
+                                text = "Enregistre le média en haute résolution dans vos dossiers publics",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = StudioTextSecondary,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
