@@ -1,0 +1,6 @@
+{
+  "name": "VisionAI Studio",
+  "description": "Génération créative d'images et vidéos avec les IA Stable Diffusion & Runway, historique et partage social.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
