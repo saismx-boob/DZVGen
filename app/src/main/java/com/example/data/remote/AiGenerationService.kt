@@ -53,20 +53,33 @@ class AiGenerationService(
         seed: Long,
         durationSeconds: Int,
         cameraMotion: String,
-        motionScore: Int
+        motionScore: Int,
+        sourceImageUrl: String = "",
+        inputMode: String = "TEXT_TO_IMAGE",
+        imageStrength: Float = 0.75f
     ): Flow<GenerationProgress> = flow {
         val isVideo = engine.mediaType == com.example.model.MediaType.VIDEO
+        val hasSourceImage = sourceImageUrl.isNotBlank()
 
         try {
             emit(GenerationProgress.Status("Connexion au moteur d'IA...", 10))
-            delay(400)
+            delay(350)
 
             if (isVideo) {
                 // VIDEO GENERATION PIPELINE (RUNWAY or LTX VIDEO or COGVIDEOX)
                 val isLtx = engine.isLtx
                 val isCog = engine == AiEngine.COGVIDEOX
 
-                if (isLtx) {
+                if (hasSourceImage) {
+                    emit(GenerationProgress.Status("Chargement & analyse de l'image source (Image-to-Video)...", 20))
+                    delay(450)
+                    emit(GenerationProgress.Status("Interpolation temporelle 3D & Caméra : $cameraMotion...", 45))
+                    delay(550)
+                    emit(GenerationProgress.Status("Génération DiT de la cinétique avec ${engine.displayName}...", 70))
+                    delay(650)
+                    emit(GenerationProgress.Status("Rendu vidéo 60 FPS à partir de l'image de départ...", 90))
+                    delay(350)
+                } else if (isLtx) {
                     val ltxVersionName = engine.displayName
                     emit(GenerationProgress.Status("Initialisation DiT $ltxVersionName (Lightricks)...", 20))
                     delay(450)
@@ -107,6 +120,7 @@ class AiGenerationService(
                 )
 
                 val tagPrefix = if (isLtx) "LTXVideo,FreeVideo,OpenSource" else if (isCog) "CogVideoX,FreeVideo" else "Runway,Video"
+                val modeTag = if (hasSourceImage) "ImageToVideo" else "TextToVideo"
                 val entity = CreationEntity(
                     type = "VIDEO",
                     title = generateTitle(prompt),
@@ -124,14 +138,24 @@ class AiGenerationService(
                     motionScore = motionScore,
                     cameraMotion = cameraMotion,
                     createdAt = System.currentTimeMillis(),
-                    tags = "$tagPrefix,${stylePreset.replace(" ", "")},$cameraMotion"
+                    tags = "$tagPrefix,$modeTag,${stylePreset.replace(" ", "")},$cameraMotion",
+                    sourceImageUrl = sourceImageUrl,
+                    inputMode = inputMode,
+                    imageStrength = imageStrength
                 )
                 emit(GenerationProgress.Success(entity))
 
             } else {
                 // IMAGE GENERATION PIPELINE (STABLE DIFFUSION / FLUX.1)
                 val isFlux = engine == AiEngine.FLUX_SCHNELL
-                if (isFlux) {
+                if (hasSourceImage) {
+                    emit(GenerationProgress.Status("Analyse de l'image source & embeddings visuels (Image-to-Image)...", 20))
+                    delay(400)
+                    emit(GenerationProgress.Status("Encodage latent & force d'influence (${(imageStrength * 100).toInt()}%)...", 45))
+                    delay(500)
+                    emit(GenerationProgress.Status("Diffusion guidée & transformation stylistique...", 75))
+                    delay(500)
+                } else if (isFlux) {
                     emit(GenerationProgress.Status("Initialisation de FLUX.1 Schnell (Black Forest Labs)...", 20))
                     delay(400)
                     emit(GenerationProgress.Status("Modélisation Rectified Flow & Embeddings T5...", 45))
@@ -179,6 +203,7 @@ class AiGenerationService(
                     )
                 }
 
+                val modeTag = if (hasSourceImage) "ImageToImage" else "TextToImage"
                 val entity = CreationEntity(
                     type = "IMAGE",
                     title = generateTitle(prompt),
@@ -196,7 +221,10 @@ class AiGenerationService(
                     motionScore = 0,
                     cameraMotion = "Fixe",
                     createdAt = System.currentTimeMillis(),
-                    tags = "StableDiffusion,Image,${stylePreset.replace(" ", "")}"
+                    tags = "StableDiffusion,$modeTag,Image,${stylePreset.replace(" ", "")}",
+                    sourceImageUrl = sourceImageUrl,
+                    inputMode = inputMode,
+                    imageStrength = imageStrength
                 )
                 emit(GenerationProgress.Success(entity))
             }

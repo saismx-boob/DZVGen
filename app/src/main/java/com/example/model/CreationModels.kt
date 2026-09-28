@@ -129,6 +129,44 @@ enum class AiEngine(
 
     val isLtx: Boolean
         get() = this == LTX_VIDEO_2_5 || this == LTX_VIDEO_2_3 || this == LTX_VIDEO_2_0 || this == LTX_VIDEO
+
+    val supportsImageInput: Boolean
+        get() = true // All models in VisionAI Studio support image guidance (Image-to-Image / Image-to-Video)
+}
+
+enum class GenerationInputMode(
+    val label: String,
+    val shortLabel: String,
+    val isImageInput: Boolean,
+    val description: String
+) {
+    TEXT_TO_IMAGE(
+        label = "Texte vers Image (T2I)",
+        shortLabel = "Texte ➔ Image",
+        isImageInput = false,
+        description = "Génération d'images haute fidélité à partir d'un prompt textuel"
+    ),
+    IMAGE_TO_IMAGE(
+        label = "Image vers Image (I2I)",
+        shortLabel = "Image ➔ Image",
+        isImageInput = true,
+        description = "Variation, restylage et transformation guidée à partir d'une photo source"
+    ),
+    TEXT_TO_VIDEO(
+        label = "Texte vers Vidéo (T2V)",
+        shortLabel = "Texte ➔ Vidéo",
+        isImageInput = false,
+        description = "Synthèse complète d'une séquence vidéo animée depuis un texte descriptif"
+    ),
+    IMAGE_TO_VIDEO(
+        label = "Image vers Vidéo (I2V)",
+        shortLabel = "Image ➔ Vidéo",
+        isImageInput = true,
+        description = "Animation cinématique fluide et mise en mouvement d'une image fixe"
+    );
+
+    val isVideo: Boolean
+        get() = this == TEXT_TO_VIDEO || this == IMAGE_TO_VIDEO
 }
 
 data class StylePreset(

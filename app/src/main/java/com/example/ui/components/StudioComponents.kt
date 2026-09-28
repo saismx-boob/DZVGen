@@ -2,6 +2,7 @@ package com.example.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -517,109 +519,237 @@ fun LiveRenderDialog(
     engineName: String,
     onCancel: () -> Unit
 ) {
+    val shimmerBrush = rememberShimmerBrush()
+    val isVideo = engineName.contains("Video", ignoreCase = true) || engineName.contains("Runway", ignoreCase = true) || engineName.contains("Cog", ignoreCase = true)
+
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.05f,
+        initialValue = 0.96f,
+        targetValue = 1.04f,
         animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = FastOutSlowInEasing),
+            animation = tween(900, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulseScale"
     )
 
+    val scanlineY by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1800, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "scanlineY"
+    )
+
+    val currentStageIndex = when {
+        progressPercent < 30 -> 0
+        progressPercent < 65 -> 1
+        progressPercent < 88 -> 2
+        else -> 3
+    }
+
+    val stages = if (isVideo) {
+        listOf("Initialisation", "Dynamique 3D", "Flow Matching", "Rendu 60 FPS")
+    } else {
+        listOf("Embeddings", "Diffusion DiT", "Décodage VAE", "Textures HD")
+    }
+
     Dialog(onDismissRequest = { /* Modal during render */ }) {
         Card(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(22.dp),
             colors = CardDefaults.cardColors(containerColor = StudioDarkSurfaceElevated),
             modifier = Modifier
                 .fillMaxWidth()
-                .border(1.5.dp, Brush.horizontalGradient(listOf(StudioNeonViolet, StudioNeonCyan)), RoundedCornerShape(20.dp))
+                .border(1.5.dp, Brush.horizontalGradient(listOf(StudioNeonViolet, StudioNeonCyan)), RoundedCornerShape(22.dp))
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Pulsing Icon
+                // Top Header Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .scale(pulseScale)
+                                .background(if (isVideo) StudioNeonPink else StudioNeonCyan, CircleShape)
+                        )
+                        Text(
+                            text = if (isVideo) "Synthèse Vidéo IA" else "Génération Image IA",
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            color = StudioTextPrimary
+                        )
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = StudioNeonCyan.copy(alpha = 0.15f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, StudioNeonCyan.copy(alpha = 0.5f))
+                    ) {
+                        Text(
+                            text = "$progressPercent%",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = StudioNeonCyan
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Interactive Animated Skeleton Preview Canvas
                 Box(
                     modifier = Modifier
-                        .size(72.dp)
-                        .scale(pulseScale)
-                        .background(
-                            Brush.radialGradient(
-                                listOf(StudioNeonViolet.copy(alpha = 0.5f), Color.Transparent)
-                            ),
-                            CircleShape
-                        ),
+                        .fillMaxWidth()
+                        .height(140.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(shimmerBrush)
+                        .border(1.dp, StudioBorder, RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.AutoAwesome,
-                        contentDescription = "Génération IA",
-                        tint = StudioNeonCyan,
-                        modifier = Modifier.size(36.dp)
+                    // Neural Grid & Scanline Simulation
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color.Transparent,
+                                        (if (isVideo) StudioNeonPink else StudioNeonCyan).copy(alpha = 0.15f),
+                                        Color.Transparent
+                                    ),
+                                    startY = scanlineY * 200f,
+                                    endY = (scanlineY * 200f) + 80f
+                                )
+                            )
                     )
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .scale(pulseScale)
+                                .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                                .border(1.dp, if (isVideo) StudioNeonPink else StudioNeonCyan, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = if (isVideo) Icons.Default.Videocam else Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                tint = if (isVideo) StudioNeonPink else StudioNeonCyan,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color.Black.copy(alpha = 0.7f)
+                        ) {
+                            Text(
+                                text = engineName,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = StudioTextPrimary,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = "Génération en cours...",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = StudioTextPrimary
-                )
+                // Multi-Stage Progress Stepper Bar
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    stages.forEachIndexed { index, stageName ->
+                        val isDone = index < currentStageIndex
+                        val isCurrent = index == currentStageIndex
+                        val stageColor = when {
+                            isDone -> StudioEmeraldGlow
+                            isCurrent -> StudioNeonCyan
+                            else -> StudioDarkSurfaceVariant
+                        }
 
-                Text(
-                    text = engineName,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = StudioNeonVioletLight,
-                    fontWeight = FontWeight.SemiBold
-                )
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(4.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(stageColor)
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = stageName,
+                                fontSize = 9.sp,
+                                fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isCurrent) StudioNeonCyan else if (isDone) StudioEmeraldGlow else StudioTextMuted,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
+                // Progress Bar with Neon Glow
                 LinearProgressIndicator(
                     progress = { progressPercent / 100f },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(8.dp)
                         .clip(RoundedCornerShape(4.dp)),
-                    color = StudioNeonCyan,
+                    color = if (isVideo) StudioNeonPink else StudioNeonCyan,
                     trackColor = StudioDarkSurfaceVariant,
                     strokeCap = StrokeCap.Round
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = stepText,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = StudioTextSecondary,
-                        maxLines = 2,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        text = "$progressPercent%",
-                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                        color = StudioNeonCyan
-                    )
-                }
+                // Live Step Details Text
+                Text(
+                    text = stepText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = StudioTextSecondary,
+                    maxLines = 2,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
+                // Cancel Button
                 OutlinedButton(
                     onClick = onCancel,
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = StudioTextMuted),
                     border = androidx.compose.foundation.BorderStroke(1.dp, StudioBorder),
-                    modifier = Modifier.testTag("cancel_generation_button")
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .height(38.dp)
+                        .testTag("cancel_generation_button")
                 ) {
-                    Text("Annuler")
+                    Text("Annuler", fontSize = 12.sp)
                 }
             }
         }

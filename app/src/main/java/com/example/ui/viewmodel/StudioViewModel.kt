@@ -10,6 +10,7 @@ import com.example.data.repository.CreationRepository
 import com.example.model.AiEngine
 import com.example.model.AspectRatioChoice
 import com.example.model.CameraMotions
+import com.example.model.GenerationInputMode
 import com.example.model.MediaType
 import com.example.model.StylePreset
 import com.example.model.StylePresets
@@ -26,6 +27,9 @@ data class StudioUiState(
     val selectedEngine: AiEngine = AiEngine.STABLE_DIFFUSION_XL,
     val selectedPreset: StylePreset = StylePresets.list.first(),
     val selectedAspectRatio: AspectRatioChoice = AspectRatioChoice.SQUARE,
+    val inputMode: GenerationInputMode = GenerationInputMode.TEXT_TO_IMAGE,
+    val sourceImageUri: String? = null,
+    val imageStrength: Float = 0.75f,
     val steps: Int = 30,
     val cfgScale: Float = 7.5f,
     val seed: Long = 0L,
@@ -74,8 +78,53 @@ class StudioViewModel(
             } else {
                 current.selectedAspectRatio
             }
-            current.copy(selectedEngine = engine, selectedAspectRatio = ratio)
+
+            // Sync inputMode with mediaType
+            val adjustedMode = if (engine.mediaType == MediaType.VIDEO) {
+                if (current.inputMode.isImageInput) GenerationInputMode.IMAGE_TO_VIDEO else GenerationInputMode.TEXT_TO_VIDEO
+            } else {
+                if (current.inputMode.isImageInput) GenerationInputMode.IMAGE_TO_IMAGE else GenerationInputMode.TEXT_TO_IMAGE
+            }
+
+            current.copy(
+                selectedEngine = engine,
+                selectedAspectRatio = ratio,
+                inputMode = adjustedMode
+            )
         }
+    }
+
+    fun onInputModeChange(mode: GenerationInputMode) {
+        _uiState.update { current ->
+            // If selecting a video mode but current engine is image, switch to best video engine
+            val engine = if (mode.isVideo && current.selectedEngine.mediaType != MediaType.VIDEO) {
+                AiEngine.LTX_VIDEO_2_5
+            } else if (!mode.isVideo && current.selectedEngine.mediaType != MediaType.IMAGE) {
+                AiEngine.FLUX_SCHNELL
+            } else {
+                current.selectedEngine
+            }
+
+            val ratio = if (mode.isVideo && current.selectedAspectRatio == AspectRatioChoice.SQUARE) {
+                AspectRatioChoice.LANDSCAPE
+            } else {
+                current.selectedAspectRatio
+            }
+
+            current.copy(
+                inputMode = mode,
+                selectedEngine = engine,
+                selectedAspectRatio = ratio
+            )
+        }
+    }
+
+    fun onSourceImageSelected(uri: String?) {
+        _uiState.update { it.copy(sourceImageUri = uri) }
+    }
+
+    fun onImageStrengthChange(strength: Float) {
+        _uiState.update { it.copy(imageStrength = strength) }
     }
 
     fun onSelectPreset(preset: StylePreset) {
@@ -186,7 +235,10 @@ class StudioViewModel(
                 seed = if (state.isRandomSeed) 0L else state.seed,
                 durationSeconds = state.videoDuration,
                 cameraMotion = state.selectedCameraMotion,
-                motionScore = state.motionScore
+                motionScore = state.motionScore,
+                sourceImageUrl = state.sourceImageUri ?: "",
+                inputMode = state.inputMode.name,
+                imageStrength = state.imageStrength
             ).collect { progress ->
                 when (progress) {
                     is GenerationProgress.Status -> {

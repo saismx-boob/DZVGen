@@ -52,7 +52,10 @@ class CreationRepository(
         seed: Long,
         durationSeconds: Int,
         cameraMotion: String,
-        motionScore: Int
+        motionScore: Int,
+        sourceImageUrl: String = "",
+        inputMode: String = "TEXT_TO_IMAGE",
+        imageStrength: Float = 0.75f
     ): Flow<GenerationProgress> {
         return aiService.generate(
             prompt = prompt,
@@ -65,7 +68,10 @@ class CreationRepository(
             seed = seed,
             durationSeconds = durationSeconds,
             cameraMotion = cameraMotion,
-            motionScore = motionScore
+            motionScore = motionScore,
+            sourceImageUrl = sourceImageUrl,
+            inputMode = inputMode,
+            imageStrength = imageStrength
         )
     }
 }

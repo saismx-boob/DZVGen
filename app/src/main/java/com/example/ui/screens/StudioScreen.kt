@@ -70,6 +70,7 @@ import com.example.model.MediaType
 import com.example.ui.components.AdvancedPromptBuilder
 import com.example.ui.components.AspectRatioSelector
 import com.example.ui.components.EngineCardSelector
+import com.example.ui.components.GenerationModeSelector
 import com.example.ui.components.LiveRenderDialog
 import com.example.ui.components.StylePresetSelector
 import com.example.ui.theme.StudioAmberFlame
@@ -270,6 +271,18 @@ fun StudioScreen(
                         }
                     }
                 }
+            }
+
+            // Generation Mode Selector (Text-to-Image, Image-to-Image, Text-to-Video, Image-to-Video)
+            item {
+                GenerationModeSelector(
+                    selectedMode = uiState.inputMode,
+                    onSelectMode = { viewModel.onInputModeChange(it) },
+                    sourceImageUri = uiState.sourceImageUri,
+                    onSourceImageSelected = { viewModel.onSourceImageSelected(it) },
+                    imageStrength = uiState.imageStrength,
+                    onImageStrengthChange = { viewModel.onImageStrengthChange(it) }
+                )
             }
 
             // Engine Selector Card
@@ -696,15 +709,27 @@ fun StudioScreen(
                             tint = Color.White,
                             modifier = Modifier.size(24.dp)
                         )
-                        val buttonTitle = when (uiState.selectedEngine) {
-                            com.example.model.AiEngine.LTX_VIDEO_2_5 -> "GÉNÉRER AVEC LTX 2.5 TURBO (GRATUIT)"
-                            com.example.model.AiEngine.LTX_VIDEO_2_3 -> "GÉNÉRER AVEC LTX 2.3 HD (GRATUIT)"
-                            com.example.model.AiEngine.LTX_VIDEO_2_0 -> "GÉNÉRER AVEC LTX 2.0 PRO (GRATUIT)"
-                            com.example.model.AiEngine.LTX_VIDEO -> "GÉNÉRER AVEC LTX VIDEO (GRATUIT)"
-                            com.example.model.AiEngine.FLUX_SCHNELL -> "GÉNÉRER L'IMAGE FLUX.1 (GRATUIT)"
-                            com.example.model.AiEngine.SD_TURBO -> "GÉNÉRER AVEC SDXL TURBO (GRATUIT)"
-                            com.example.model.AiEngine.COGVIDEOX -> "GÉNÉRER AVEC COGVIDEOX (GRATUIT)"
-                            com.example.model.AiEngine.RUNWAY_GEN3, com.example.model.AiEngine.RUNWAY_GEN2 -> "GÉNÉRER LA VIDÉO RUNWAY"
+                        val buttonTitle = when {
+                            uiState.inputMode == com.example.model.GenerationInputMode.IMAGE_TO_VIDEO ->
+                                "ANIMER L'IMAGE EN VIDÉO (${uiState.selectedEngine.displayName.uppercase()})"
+                            uiState.inputMode == com.example.model.GenerationInputMode.IMAGE_TO_IMAGE ->
+                                "STYLER L'IMAGE SOURCE (${uiState.selectedEngine.displayName.uppercase()})"
+                            uiState.selectedEngine == com.example.model.AiEngine.LTX_VIDEO_2_5 ->
+                                "GÉNÉRER AVEC LTX 2.5 TURBO (GRATUIT)"
+                            uiState.selectedEngine == com.example.model.AiEngine.LTX_VIDEO_2_3 ->
+                                "GÉNÉRER AVEC LTX 2.3 HD (GRATUIT)"
+                            uiState.selectedEngine == com.example.model.AiEngine.LTX_VIDEO_2_0 ->
+                                "GÉNÉRER AVEC LTX 2.0 PRO (GRATUIT)"
+                            uiState.selectedEngine == com.example.model.AiEngine.LTX_VIDEO ->
+                                "GÉNÉRER AVEC LTX VIDEO (GRATUIT)"
+                            uiState.selectedEngine == com.example.model.AiEngine.FLUX_SCHNELL ->
+                                "GÉNÉRER L'IMAGE FLUX.1 (GRATUIT)"
+                            uiState.selectedEngine == com.example.model.AiEngine.SD_TURBO ->
+                                "GÉNÉRER AVEC SDXL TURBO (GRATUIT)"
+                            uiState.selectedEngine == com.example.model.AiEngine.COGVIDEOX ->
+                                "GÉNÉRER AVEC COGVIDEOX (GRATUIT)"
+                            uiState.selectedEngine == com.example.model.AiEngine.RUNWAY_GEN3 || uiState.selectedEngine == com.example.model.AiEngine.RUNWAY_GEN2 ->
+                                "GÉNÉRER LA VIDÉO RUNWAY"
                             else -> "GÉNÉRER L'IMAGE STABLE DIFFUSION"
                         }
                         Text(

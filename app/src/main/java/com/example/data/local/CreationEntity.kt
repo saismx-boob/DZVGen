@@ -24,5 +24,8 @@ data class CreationEntity(
     val cameraMotion: String = "Cinematic Zoom",
     val createdAt: Long = System.currentTimeMillis(),
     val isFavorite: Boolean = false,
-    val tags: String = "AI,Art"
+    val tags: String = "AI,Art",
+    val sourceImageUrl: String = "",
+    val inputMode: String = "TEXT_TO_IMAGE",
+    val imageStrength: Float = 0.75f
 )
