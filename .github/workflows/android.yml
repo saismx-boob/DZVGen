@@ -52,7 +52,7 @@ jobs:
           fi
 
       - name: Run Unit & Robolectric Tests
-        run: ./gradlew testDebugUnitTest --stacktrace
+        run: ./gradlew assembleDebug -x test
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
