@@ -8,6 +8,7 @@ class PreferencesManager(context: Context) {
         context.getSharedPreferences("vision_ai_settings", Context.MODE_PRIVATE)
 
     companion object {
+        private const val KEY_LTX_API_KEY = "ltx_api_key"
         private const val KEY_STABILITY_API_KEY = "stability_api_key"
         private const val KEY_RUNWAY_API_KEY = "runway_api_key"
         private const val KEY_DEFAULT_ENGINE = "default_engine"
@@ -15,6 +16,10 @@ class PreferencesManager(context: Context) {
         private const val KEY_AUTO_SAVE = "auto_save"
         private const val KEY_ENHANCE_PROMPT_AUTO = "enhance_prompt_auto"
     }
+
+    var ltxApiKey: String
+        get() = prefs.getString(KEY_LTX_API_KEY, "") ?: ""
+        set(value) = prefs.edit().putString(KEY_LTX_API_KEY, value).apply()
 
     var stabilityApiKey: String
         get() = prefs.getString(KEY_STABILITY_API_KEY, "") ?: ""

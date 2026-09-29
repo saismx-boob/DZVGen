@@ -323,6 +323,65 @@ fun SettingsScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
+                        // LTX Video Key Input (console.ltx.io)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Clé API LTX Video (console.ltx.io) :",
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                                color = StudioEmeraldGlow
+                            )
+                            if (uiState.ltxApiKey.isNotBlank()) {
+                                Text(
+                                    text = "✓ Configurée",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = StudioEmeraldGlow
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = uiState.ltxApiKey,
+                            onValueChange = { viewModel.onLtxKeyChange(it) },
+                            placeholder = {
+                                Text("Clé Bearer LTX...", color = StudioTextMuted, fontSize = 12.sp)
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Key,
+                                    contentDescription = null,
+                                    tint = StudioEmeraldGlow,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .testTag("ltx_api_key_input"),
+                            shape = RoundedCornerShape(10.dp),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = StudioEmeraldGlow,
+                                unfocusedBorderColor = StudioBorder,
+                                focusedContainerColor = StudioDarkBg,
+                                unfocusedContainerColor = StudioDarkBg,
+                                focusedTextColor = StudioTextPrimary,
+                                unfocusedTextColor = StudioTextPrimary
+                            )
+                        )
+                        Text(
+                            text = "Accès direct à https://api.ltx.io/v2/image-to-video (LTX-2.5 Pro, LTX-2.5 Fast, LTX-2.3).",
+                            fontSize = 11.sp,
+                            color = StudioTextMuted,
+                            modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
                         // Stability AI Key Input
                         Text(
                             text = "Clé API Stability AI (Stable Diffusion) :",

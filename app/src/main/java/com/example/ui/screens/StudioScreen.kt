@@ -1,5 +1,7 @@
 package com.example.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,8 +28,10 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -39,6 +43,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Slider
@@ -80,6 +85,7 @@ import com.example.ui.theme.StudioDarkBg
 import com.example.ui.theme.StudioDarkSurface
 import com.example.ui.theme.StudioDarkSurfaceElevated
 import com.example.ui.theme.StudioDarkSurfaceVariant
+import com.example.ui.theme.StudioEmeraldGlow
 import com.example.ui.theme.StudioNeonCyan
 import com.example.ui.theme.StudioNeonPink
 import com.example.ui.theme.StudioNeonViolet
@@ -94,6 +100,7 @@ import com.example.ui.viewmodel.StudioViewModel
 fun StudioScreen(
     viewModel: StudioViewModel,
     onNavigateToDetail: (CreationEntity) -> Unit,
+    onNavigateToLtxPlayground: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -292,6 +299,114 @@ fun StudioScreen(
                     selectedEngine = uiState.selectedEngine,
                     onSelectEngine = { viewModel.onSelectEngine(it) }
                 )
+            }
+
+            // LTX Platform Direct Playground Banner
+            if (uiState.selectedEngine in listOf(
+                com.example.model.AiEngine.LTX_VIDEO,
+                com.example.model.AiEngine.LTX_VIDEO_2_5,
+                com.example.model.AiEngine.LTX_VIDEO_2_3,
+                com.example.model.AiEngine.LTX_VIDEO_2_0
+            )) {
+                item {
+                    val context = androidx.compose.ui.platform.LocalContext.current
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = StudioDarkSurface),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, StudioEmeraldGlow.copy(alpha = 0.6f))
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .background(StudioEmeraldGlow, CircleShape)
+                                    )
+                                    Text(
+                                        text = "CONSOLE.LTX.IO / IMAGE-TO-VIDEO",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp,
+                                        color = StudioEmeraldGlow
+                                    )
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = StudioEmeraldGlow.copy(alpha = 0.2f)
+                                ) {
+                                    Text(
+                                        text = "60 FPS NATIF",
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = StudioEmeraldGlow,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Text(
+                                text = "Moteur DiT officiel Lightricks. Vous pouvez générer ici ou basculer sur le Playground LTX dédié avec upload direct, contrôles exacts de console.ltx.io et export cURL.",
+                                fontSize = 11.sp,
+                                color = StudioTextSecondary
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Button(
+                                    onClick = { onNavigateToLtxPlayground?.invoke() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = StudioEmeraldGlow),
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Videocam,
+                                        contentDescription = null,
+                                        tint = Color.Black,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Ouvrir Playground", fontSize = 11.sp, color = Color.Black, fontWeight = FontWeight.Bold)
+                                }
+
+                                OutlinedButton(
+                                    onClick = {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://console.ltx.io/playground/image-to-video"))
+                                        context.startActivity(intent)
+                                    },
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, StudioBorder),
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.OpenInBrowser,
+                                        contentDescription = null,
+                                        tint = StudioTextPrimary,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("console.ltx.io", fontSize = 11.sp, color = StudioTextPrimary)
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // Prompt Input Card

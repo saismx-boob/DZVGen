@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -44,12 +45,14 @@ import androidx.compose.ui.unit.sp
 import com.example.data.local.CreationEntity
 import com.example.ui.screens.DetailScreen
 import com.example.ui.screens.HistoryScreen
+import com.example.ui.screens.LtxPlaygroundScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.StudioScreen
 import com.example.ui.theme.StudioBorder
 import com.example.ui.theme.StudioDarkBg
 import com.example.ui.theme.StudioDarkSurface
 import com.example.ui.theme.StudioDarkSurfaceElevated
+import com.example.ui.theme.StudioEmeraldGlow
 import com.example.ui.theme.StudioNeonCyan
 import com.example.ui.theme.StudioNeonViolet
 import com.example.ui.theme.StudioNeonVioletLight
@@ -57,11 +60,14 @@ import com.example.ui.theme.StudioTextMuted
 import com.example.ui.theme.StudioTextPrimary
 import com.example.ui.theme.StudioTextSecondary
 import com.example.ui.viewmodel.HistoryViewModel
+import com.example.ui.viewmodel.LtxPlaygroundViewModel
 import com.example.ui.viewmodel.SettingsViewModel
 import com.example.ui.viewmodel.StudioViewModel
+import androidx.activity.compose.BackHandler
 
 enum class StudioDestination(val title: String, val testTag: String) {
     STUDIO("Créer", "nav_studio"),
+    LTX_PLAYGROUND("Playground LTX", "nav_ltx_playground"),
     HISTORY("Historique", "nav_history"),
     SETTINGS("Paramètres", "nav_settings")
 }
@@ -69,6 +75,7 @@ enum class StudioDestination(val title: String, val testTag: String) {
 @Composable
 fun MainApp(
     studioViewModel: StudioViewModel,
+    ltxPlaygroundViewModel: LtxPlaygroundViewModel,
     historyViewModel: HistoryViewModel,
     settingsViewModel: SettingsViewModel,
     modifier: Modifier = Modifier
@@ -76,6 +83,14 @@ fun MainApp(
     var currentDestination by remember { mutableStateOf(StudioDestination.STUDIO) }
     var selectedCreationForDetail by remember { mutableStateOf<CreationEntity?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+
+    BackHandler(enabled = selectedCreationForDetail != null || currentDestination != StudioDestination.STUDIO) {
+        if (selectedCreationForDetail != null) {
+            selectedCreationForDetail = null
+        } else {
+            currentDestination = StudioDestination.STUDIO
+        }
+    }
 
     Scaffold(
         modifier = modifier
@@ -107,13 +122,13 @@ fun MainApp(
                                     imageVector = Icons.Default.AutoAwesome,
                                     contentDescription = "Studio",
                                     tint = if (isStudio) StudioNeonCyan else StudioTextMuted,
-                                    modifier = Modifier.size(22.dp)
+                                    modifier = Modifier.size(20.dp)
                                 )
                             },
                             label = {
                                 Text(
-                                    text = "Créer",
-                                    fontSize = 11.sp,
+                                    text = "Studio",
+                                    fontSize = 10.sp,
                                     fontWeight = if (isStudio) FontWeight.Bold else FontWeight.Normal,
                                     color = if (isStudio) StudioTextPrimary else StudioTextMuted
                                 )
@@ -124,7 +139,34 @@ fun MainApp(
                             modifier = Modifier.testTag(StudioDestination.STUDIO.testTag)
                         )
 
-                        // Tab 2: History
+                        // Tab 2: LTX Playground (console.ltx.io)
+                        val isLtx = currentDestination == StudioDestination.LTX_PLAYGROUND
+                        NavigationBarItem(
+                            selected = isLtx,
+                            onClick = { currentDestination = StudioDestination.LTX_PLAYGROUND },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Videocam,
+                                    contentDescription = "Playground LTX",
+                                    tint = if (isLtx) StudioEmeraldGlow else StudioTextMuted,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = "LTX Playground",
+                                    fontSize = 10.sp,
+                                    fontWeight = if (isLtx) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isLtx) StudioEmeraldGlow else StudioTextMuted
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                indicatorColor = StudioEmeraldGlow.copy(alpha = 0.25f)
+                            ),
+                            modifier = Modifier.testTag(StudioDestination.LTX_PLAYGROUND.testTag)
+                        )
+
+                        // Tab 3: History
                         val isHistory = currentDestination == StudioDestination.HISTORY
                         NavigationBarItem(
                             selected = isHistory,
@@ -134,13 +176,13 @@ fun MainApp(
                                     imageVector = Icons.Default.GridView,
                                     contentDescription = "Historique",
                                     tint = if (isHistory) StudioNeonCyan else StudioTextMuted,
-                                    modifier = Modifier.size(22.dp)
+                                    modifier = Modifier.size(20.dp)
                                 )
                             },
                             label = {
                                 Text(
                                     text = "Historique",
-                                    fontSize = 11.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = if (isHistory) FontWeight.Bold else FontWeight.Normal,
                                     color = if (isHistory) StudioTextPrimary else StudioTextMuted
                                 )
@@ -151,7 +193,7 @@ fun MainApp(
                             modifier = Modifier.testTag(StudioDestination.HISTORY.testTag)
                         )
 
-                        // Tab 3: Settings
+                        // Tab 4: Settings
                         val isSettings = currentDestination == StudioDestination.SETTINGS
                         NavigationBarItem(
                             selected = isSettings,
@@ -161,13 +203,13 @@ fun MainApp(
                                     imageVector = Icons.Default.Settings,
                                     contentDescription = "Paramètres",
                                     tint = if (isSettings) StudioNeonCyan else StudioTextMuted,
-                                    modifier = Modifier.size(22.dp)
+                                    modifier = Modifier.size(20.dp)
                                 )
                             },
                             label = {
                                 Text(
                                     text = "Paramètres",
-                                    fontSize = 11.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = if (isSettings) FontWeight.Bold else FontWeight.Normal,
                                     color = if (isSettings) StudioTextPrimary else StudioTextMuted
                                 )
@@ -218,6 +260,17 @@ fun MainApp(
                         StudioDestination.STUDIO -> {
                             StudioScreen(
                                 viewModel = studioViewModel,
+                                onNavigateToDetail = { creation ->
+                                    selectedCreationForDetail = creation
+                                },
+                                onNavigateToLtxPlayground = {
+                                    currentDestination = StudioDestination.LTX_PLAYGROUND
+                                }
+                            )
+                        }
+                        StudioDestination.LTX_PLAYGROUND -> {
+                            LtxPlaygroundScreen(
+                                viewModel = ltxPlaygroundViewModel,
                                 onNavigateToDetail = { creation ->
                                     selectedCreationForDetail = creation
                                 }

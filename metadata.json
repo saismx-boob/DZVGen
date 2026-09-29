@@ -1,6 +1,6 @@
 {
   "name": "VisionAI Studio",
-  "description": "Génération créative d'images et vidéos avec les IA Stable Diffusion & Runway, historique et partage social.",
+  "description": "Génération créative d'images et vidéos avec les IA LTX Video (console.ltx.io), Stable Diffusion & Runway, historique et partage.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

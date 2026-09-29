@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class SettingsUiState(
+    val ltxApiKey: String = "",
     val stabilityApiKey: String = "",
     val runwayApiKey: String = "",
     val defaultEngine: AiEngine = AiEngine.STABLE_DIFFUSION_XL,
@@ -37,6 +38,7 @@ class SettingsViewModel(
         val engine = AiEngine.values().find { it.id == defaultId } ?: AiEngine.STABLE_DIFFUSION_XL
         _uiState.update {
             it.copy(
+                ltxApiKey = prefs.ltxApiKey,
                 stabilityApiKey = prefs.stabilityApiKey,
                 runwayApiKey = prefs.runwayApiKey,
                 defaultEngine = engine,
@@ -44,6 +46,10 @@ class SettingsViewModel(
                 autoEnhancePrompt = prefs.autoEnhancePrompt
             )
         }
+    }
+
+    fun onLtxKeyChange(key: String) {
+        _uiState.update { it.copy(ltxApiKey = key) }
     }
 
     fun onStabilityKeyChange(key: String) {
@@ -68,6 +74,7 @@ class SettingsViewModel(
 
     fun saveAll() {
         val s = _uiState.value
+        prefs.ltxApiKey = s.ltxApiKey.trim()
         prefs.stabilityApiKey = s.stabilityApiKey.trim()
         prefs.runwayApiKey = s.runwayApiKey.trim()
         prefs.defaultEngineId = s.defaultEngine.id

@@ -13,6 +13,7 @@ import com.example.data.repository.CreationRepository
 import com.example.ui.MainApp
 import com.example.ui.theme.VisionAITheme
 import com.example.ui.viewmodel.HistoryViewModel
+import com.example.ui.viewmodel.LtxPlaygroundViewModel
 import com.example.ui.viewmodel.SettingsViewModel
 import com.example.ui.viewmodel.StudioViewModel
 
@@ -36,6 +37,16 @@ class MainActivity : ComponentActivity() {
                 }
             }
         )[StudioViewModel::class.java]
+
+        val ltxPlaygroundViewModel = ViewModelProvider(
+            this,
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return LtxPlaygroundViewModel(repository, preferencesManager) as T
+                }
+            }
+        )[LtxPlaygroundViewModel::class.java]
 
         val historyViewModel = ViewModelProvider(
             this,
@@ -61,6 +72,7 @@ class MainActivity : ComponentActivity() {
             VisionAITheme {
                 MainApp(
                     studioViewModel = studioViewModel,
+                    ltxPlaygroundViewModel = ltxPlaygroundViewModel,
                     historyViewModel = historyViewModel,
                     settingsViewModel = settingsViewModel
                 )
