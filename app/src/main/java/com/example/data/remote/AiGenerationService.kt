@@ -56,7 +56,9 @@ class AiGenerationService(
         motionScore: Int,
         sourceImageUrl: String = "",
         inputMode: String = "TEXT_TO_IMAGE",
-        imageStrength: Float = 0.75f
+        imageStrength: Float = 0.75f,
+        fps: Int = 30,
+        sampler: String = "Default"
     ): Flow<GenerationProgress> = flow {
         val isVideo = engine.mediaType == com.example.model.MediaType.VIDEO
         val hasSourceImage = sourceImageUrl.isNotBlank()
@@ -141,7 +143,9 @@ class AiGenerationService(
                     tags = "$tagPrefix,$modeTag,${stylePreset.replace(" ", "")},$cameraMotion",
                     sourceImageUrl = sourceImageUrl,
                     inputMode = inputMode,
-                    imageStrength = imageStrength
+                    imageStrength = imageStrength,
+                    fps = fps,
+                    sampler = sampler
                 )
                 emit(GenerationProgress.Success(entity))
 
@@ -224,7 +228,9 @@ class AiGenerationService(
                     tags = "StableDiffusion,$modeTag,Image,${stylePreset.replace(" ", "")}",
                     sourceImageUrl = sourceImageUrl,
                     inputMode = inputMode,
-                    imageStrength = imageStrength
+                    imageStrength = imageStrength,
+                    fps = 0,
+                    sampler = sampler
                 )
                 emit(GenerationProgress.Success(entity))
             }

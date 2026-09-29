@@ -27,5 +27,7 @@ data class CreationEntity(
     val tags: String = "AI,Art",
     val sourceImageUrl: String = "",
     val inputMode: String = "TEXT_TO_IMAGE",
-    val imageStrength: Float = 0.75f
+    val imageStrength: Float = 0.75f,
+    val fps: Int = 30,
+    val sampler: String = "Default"
 )

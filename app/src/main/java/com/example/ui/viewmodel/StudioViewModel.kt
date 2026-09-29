@@ -37,6 +37,8 @@ data class StudioUiState(
     val videoDuration: Int = 5,
     val selectedCameraMotion: String = CameraMotions.list.first().name,
     val motionScore: Int = 6,
+    val sampler: String = "Default",
+    val fps: Int = 30,
     val isGenerating: Boolean = false,
     val currentStepText: String = "",
     val progressPercent: Int = 0,
@@ -56,10 +58,21 @@ class StudioViewModel(
     private var generationJob: Job? = null
 
     init {
-        // Load default engine from preferences
+        // Load default engine from preferences and import its recommended options
         val defaultId = prefs.defaultEngineId
         val engine = AiEngine.values().find { it.id == defaultId } ?: AiEngine.STABLE_DIFFUSION_XL
-        _uiState.update { it.copy(selectedEngine = engine) }
+        val profile = engine.profile
+        _uiState.update {
+            it.copy(
+                selectedEngine = engine,
+                steps = profile.defaultSteps,
+                cfgScale = profile.defaultCfg,
+                sampler = profile.defaultSampler,
+                fps = profile.defaultFps,
+                videoDuration = if (profile.supportedDurations.isNotEmpty()) profile.defaultDuration else 0,
+                selectedAspectRatio = if (profile.supportedAspectRatios.contains(it.selectedAspectRatio)) it.selectedAspectRatio else profile.supportedAspectRatios.first()
+            )
+        }
     }
 
     fun onPromptChange(newPrompt: String) {
@@ -71,12 +84,13 @@ class StudioViewModel(
     }
 
     fun onSelectEngine(engine: AiEngine) {
+        val profile = engine.profile
         _uiState.update { current ->
-            // Adjust aspect ratio default if switching to video
-            val ratio = if (engine.mediaType == MediaType.VIDEO && current.selectedAspectRatio == AspectRatioChoice.SQUARE) {
-                AspectRatioChoice.LANDSCAPE
-            } else {
+            // Adjust aspect ratio default if current is not in supported list
+            val ratio = if (current.selectedAspectRatio in profile.supportedAspectRatios) {
                 current.selectedAspectRatio
+            } else {
+                profile.supportedAspectRatios.firstOrNull() ?: AspectRatioChoice.LANDSCAPE
             }
 
             // Sync inputMode with mediaType
@@ -86,12 +100,40 @@ class StudioViewModel(
                 if (current.inputMode.isImageInput) GenerationInputMode.IMAGE_TO_IMAGE else GenerationInputMode.TEXT_TO_IMAGE
             }
 
+            // Import model's exact creation & generation parameters
             current.copy(
                 selectedEngine = engine,
                 selectedAspectRatio = ratio,
-                inputMode = adjustedMode
+                inputMode = adjustedMode,
+                steps = profile.defaultSteps,
+                cfgScale = profile.defaultCfg,
+                sampler = profile.defaultSampler,
+                fps = profile.defaultFps,
+                videoDuration = if (profile.supportedDurations.isNotEmpty()) profile.defaultDuration else 0
             )
         }
+    }
+
+    fun importModelRecommendedOptions() {
+        val profile = _uiState.value.selectedEngine.profile
+        _uiState.update { current ->
+            current.copy(
+                steps = profile.defaultSteps,
+                cfgScale = profile.defaultCfg,
+                sampler = profile.defaultSampler,
+                fps = profile.defaultFps,
+                videoDuration = if (profile.supportedDurations.isNotEmpty()) profile.defaultDuration else 0,
+                selectedAspectRatio = if (current.selectedAspectRatio in profile.supportedAspectRatios) current.selectedAspectRatio else profile.supportedAspectRatios.first()
+            )
+        }
+    }
+
+    fun onSamplerChange(sampler: String) {
+        _uiState.update { it.copy(sampler = sampler) }
+    }
+
+    fun onFpsChange(fps: Int) {
+        _uiState.update { it.copy(fps = fps) }
     }
 
     fun onInputModeChange(mode: GenerationInputMode) {
@@ -238,7 +280,9 @@ class StudioViewModel(
                 motionScore = state.motionScore,
                 sourceImageUrl = state.sourceImageUri ?: "",
                 inputMode = state.inputMode.name,
-                imageStrength = state.imageStrength
+                imageStrength = state.imageStrength,
+                fps = state.fps,
+                sampler = state.sampler
             ).collect { progress ->
                 when (progress) {
                     is GenerationProgress.Status -> {

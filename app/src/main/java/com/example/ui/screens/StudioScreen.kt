@@ -72,6 +72,7 @@ import com.example.ui.components.AspectRatioSelector
 import com.example.ui.components.EngineCardSelector
 import com.example.ui.components.GenerationModeSelector
 import com.example.ui.components.LiveRenderDialog
+import com.example.ui.components.ModelOptionsCard
 import com.example.ui.components.StylePresetSelector
 import com.example.ui.theme.StudioAmberFlame
 import com.example.ui.theme.StudioBorder
@@ -419,188 +420,34 @@ fun StudioScreen(
                 )
             }
 
-            // Negative prompt collapsible accordion
+            // Model-Specific Creation & Generation Options
             item {
-                Card(
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = StudioDarkSurface),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, StudioBorder),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { viewModel.toggleAdvParams() },
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Tune,
-                                    contentDescription = null,
-                                    tint = StudioNeonCyan,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    text = "Paramètres avancés & Prompt Négatif",
-                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = StudioTextPrimary
-                                )
-                            }
-                            Icon(
-                                imageVector = if (uiState.showAdvParams) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                contentDescription = null,
-                                tint = StudioTextSecondary
-                            )
-                        }
-
-                        AnimatedVisibility(visible = uiState.showAdvParams) {
-                            Column(modifier = Modifier.padding(top = 12.dp)) {
-                                Text(
-                                    text = "Prompt Négatif (éléments à exclure) :",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = StudioTextSecondary
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                OutlinedTextField(
-                                    value = uiState.negativePrompt,
-                                    onValueChange = { viewModel.onNegativePromptChange(it) },
-                                    placeholder = {
-                                        Text("flou, mauvaise qualité, déformation, filigrane...", color = StudioTextMuted, fontSize = 12.sp)
-                                    },
-                                    modifier = Modifier.fillMaxWidth().height(65.dp),
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = StudioNeonCyan,
-                                        unfocusedBorderColor = StudioBorder,
-                                        focusedContainerColor = StudioDarkBg,
-                                        unfocusedContainerColor = StudioDarkBg,
-                                        focusedTextColor = StudioTextPrimary,
-                                        unfocusedTextColor = StudioTextPrimary
-                                    )
-                                )
-
-                                Spacer(modifier = Modifier.height(12.dp))
-
-                                if (!isVideo) {
-                                    // Stable Diffusion specific params
-                                    Text(
-                                        text = "Étapes de diffusion (Steps) : ${uiState.steps}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = StudioTextSecondary
-                                    )
-                                    Slider(
-                                        value = uiState.steps.toFloat(),
-                                        onValueChange = { viewModel.onStepsChange(it.toInt()) },
-                                        valueRange = 15f..50f,
-                                        steps = 7,
-                                        colors = SliderDefaults.colors(
-                                            thumbColor = StudioNeonViolet,
-                                            activeTrackColor = StudioNeonViolet
-                                        )
-                                    )
-
-                                    Text(
-                                        text = "Échelle de guidage CFG : ${String.format("%.1f", uiState.cfgScale)}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = StudioTextSecondary
-                                    )
-                                    Slider(
-                                        value = uiState.cfgScale,
-                                        onValueChange = { viewModel.onCfgScaleChange(it) },
-                                        valueRange = 2f..15f,
-                                        steps = 13,
-                                        colors = SliderDefaults.colors(
-                                            thumbColor = StudioNeonCyan,
-                                            activeTrackColor = StudioNeonCyan
-                                        )
-                                    )
-                                } else {
-                                    // Runway video specific params
-                                    Text(
-                                        text = "Intensité du mouvement Runway (Motion) : ${uiState.motionScore}/10",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = StudioTextSecondary
-                                    )
-                                    Slider(
-                                        value = uiState.motionScore.toFloat(),
-                                        onValueChange = { viewModel.onMotionScoreChange(it.toInt()) },
-                                        valueRange = 1f..10f,
-                                        steps = 8,
-                                        colors = SliderDefaults.colors(
-                                            thumbColor = StudioNeonPink,
-                                            activeTrackColor = StudioNeonPink
-                                        )
-                                    )
-
-                                    Spacer(modifier = Modifier.height(8.dp))
-
-                                    // Camera Motion Selector
-                                    Text(
-                                        text = "Trajectoire de caméra cinématographique :",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = StudioTextSecondary
-                                    )
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    LazyRow(
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        items(CameraMotions.list) { motion ->
-                                            val isMotionSelected = motion.name == uiState.selectedCameraMotion
-                                            Surface(
-                                                shape = RoundedCornerShape(10.dp),
-                                                color = if (isMotionSelected) StudioNeonPink.copy(alpha = 0.3f) else StudioDarkBg,
-                                                border = androidx.compose.foundation.BorderStroke(
-                                                    1.dp,
-                                                    if (isMotionSelected) StudioNeonPink else StudioBorder
-                                                ),
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(10.dp))
-                                                    .clickable { viewModel.onCameraMotionChange(motion.name) }
-                                            ) {
-                                                Text(
-                                                    text = motion.name,
-                                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                                    fontSize = 11.sp,
-                                                    fontWeight = if (isMotionSelected) FontWeight.Bold else FontWeight.Normal,
-                                                    color = if (isMotionSelected) Color.White else StudioTextSecondary
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(10.dp))
-
-                                // Seed Random Switch
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "Graine aléatoire (Random Seed)",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = StudioTextSecondary
-                                    )
-                                    Switch(
-                                        checked = uiState.isRandomSeed,
-                                        onCheckedChange = { viewModel.onRandomSeedToggle(it) },
-                                        colors = SwitchDefaults.colors(
-                                            checkedThumbColor = StudioNeonCyan,
-                                            checkedTrackColor = StudioNeonViolet.copy(alpha = 0.5f)
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+                ModelOptionsCard(
+                    engine = uiState.selectedEngine,
+                    steps = uiState.steps,
+                    onStepsChange = { viewModel.onStepsChange(it) },
+                    cfgScale = uiState.cfgScale,
+                    onCfgScaleChange = { viewModel.onCfgScaleChange(it) },
+                    sampler = uiState.sampler,
+                    onSamplerChange = { viewModel.onSamplerChange(it) },
+                    fps = uiState.fps,
+                    onFpsChange = { viewModel.onFpsChange(it) },
+                    videoDuration = uiState.videoDuration,
+                    onDurationChange = { viewModel.onVideoDurationChange(it) },
+                    motionScore = uiState.motionScore,
+                    onMotionScoreChange = { viewModel.onMotionScoreChange(it) },
+                    selectedCameraMotion = uiState.selectedCameraMotion,
+                    onCameraMotionChange = { viewModel.onCameraMotionChange(it) },
+                    negativePrompt = uiState.negativePrompt,
+                    onNegativePromptChange = { viewModel.onNegativePromptChange(it) },
+                    seed = uiState.seed,
+                    onSeedChange = { viewModel.onSeedChange(it) },
+                    isRandomSeed = uiState.isRandomSeed,
+                    onRandomSeedToggle = { viewModel.onRandomSeedToggle(it) },
+                    onResetToModelDefaults = { viewModel.importModelRecommendedOptions() },
+                    isExpanded = uiState.showAdvParams,
+                    onToggleExpanded = { viewModel.toggleAdvParams() }
+                )
             }
 
             // Style Presets Carousel

@@ -505,8 +505,8 @@ fun DetailScreen(
                         Row(modifier = Modifier.fillMaxWidth()) {
                             if (isVideo) {
                                 TechParamItem(
-                                    label = "Durée Vidéo",
-                                    value = "${creation.durationSeconds} secondes (60 FPS)",
+                                    label = "Durée & Fluidité",
+                                    value = "${creation.durationSeconds}s @ ${if (creation.fps > 0) creation.fps else 60} FPS",
                                     modifier = Modifier.weight(1f)
                                 )
                                 TechParamItem(
@@ -526,6 +526,24 @@ fun DetailScreen(
                                     modifier = Modifier.weight(1f)
                                 )
                             }
+                        }
+
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            TechParamItem(
+                                label = "Échantillonneur (Sampler)",
+                                value = creation.sampler.ifEmpty { "Default Solver" },
+                                modifier = Modifier.weight(1f)
+                            )
+                            TechParamItem(
+                                label = "Mode d'Entrée",
+                                value = when (creation.inputMode) {
+                                    "IMAGE_TO_VIDEO" -> "Image ➔ Vidéo"
+                                    "IMAGE_TO_IMAGE" -> "Image ➔ Image"
+                                    "TEXT_TO_VIDEO" -> "Texte ➔ Vidéo"
+                                    else -> "Texte ➔ Image"
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
 
                         Row(modifier = Modifier.fillMaxWidth()) {
